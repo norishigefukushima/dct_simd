@@ -126,7 +126,7 @@ int main()
 	Mat src;
 	a(Rect(8*24,8*16,8,8)).copyTo(src);
 
-	//fwd DCT x 100000 interation, without showing coefficient
+	//fwd DCT x 100000 iteration, without showing coefficient
 	fDCT_Test(src,100000,false);
 
 	Mat swp;
@@ -134,7 +134,7 @@ int main()
 	cv::dct(src,swp);
 	swp.copyTo(src);
 
-	//inv DCT x 100000 interation, without showing coefficient
+	//inv DCT x 100000 iteration, without showing coefficient
 	iDCT_Test(src,100000,false);
 
 	waitKey(1000);
