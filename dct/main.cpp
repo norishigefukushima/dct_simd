@@ -1,6 +1,12 @@
 #include <opencv2/opencv.hpp>
-#pragma comment(lib, "opencv_core240.lib")
-#pragma comment(lib, "opencv_highgui240.lib")
+
+//for opencv2.4
+//#pragma comment(lib, "opencv_core240.lib")
+//#pragma comment(lib, "opencv_highgui240.lib")
+
+//for opencv2.45 (may faster than 2.4 )
+#pragma comment(lib, "opencv_core245.lib")
+#pragma comment(lib, "opencv_highgui245.lib")
 
 using namespace cv;
 using namespace std;
@@ -139,7 +145,7 @@ int main()
 
 	waitKey(1000);
 	Mat aq(a.size(),CV_32F);
-	for(int i=0;i<1000;i+=1)
+	for(int i=0;i<300;i+=3)
 	{
 		int64 pre = getTickCount();
 		DCT_Quant_Test(a,aq,i);
@@ -149,6 +155,6 @@ int main()
 		Mat show;
 		aq.convertTo(show,CV_8U);
 		imshow("DCT:Q",show);
-		waitKey(10);
+		waitKey(1);
 	}
 }
