@@ -24,7 +24,8 @@ void fDCT8x8_32f(const float* s, float* d, float* temp);//fwd
 void iDCT2Dllm_32f(const float* s, float* d, float* temp);//inv
 void fDCT2Dllm_32f(const float* s, float* d, float* temp);//fwd
 
-void dct4x4_llm(Mat& a, Mat& b, Mat& temp ,int flag=0);//LLM C++ implimentation
+void dct4x4_llm_sse(float* a, float* b, float* temp ,int flag=0);//LLM SSE implimentation
+void dct4x4_llm(float* a, float* b, float* temp ,int flag=0);//LLM C++ implimentation
 void dct4x4_bf(Mat& a, Mat& b, int flag=0);//matmul: brute force implimentation
 
 
@@ -142,6 +143,8 @@ void fDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 	}
 	if(isShowMat) cout<<b<<endl;
 
+
+	b.setTo(0);
 	{
 		int64 pre = getTickCount();
 		for(int i=0;i<iter;i++)
@@ -150,13 +153,29 @@ void fDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 	}
 	if(isShowMat) cout<<b<<endl;
 
+	b.setTo(0);
 	Mat temp = Mat::zeros(4,4,CV_32F);
 	//dest Mat should be allocated 
 	{
 		int64 pre = getTickCount();
+		float* s = a.ptr<float>(0);
+		float* d = b.ptr<float>(0);
+		float* t = temp.ptr<float>(0);
 		for(int i=0;i<iter;i++)
-			dct4x4_llm(a,b,temp);
+			dct4x4_llm(s,d,t);
 		cout<<"LLM(c++):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	if(isShowMat) cout<<b<<endl;
+
+	b.setTo(0);
+	{
+		int64 pre = getTickCount();
+		float* s = a.ptr<float>(0);
+		float* d = b.ptr<float>(0);
+		float* t = temp.ptr<float>(0);
+		for(int i=0;i<iter;i++)
+			dct4x4_llm_sse(s,d,t);
+		cout<<"LLM(SSE):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 	}
 	if(isShowMat) cout<<b<<endl;
 //	cout<<d*0.5<<endl;
@@ -173,6 +192,7 @@ void iDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 	}
 	if(isShowMat) cout<<b<<endl;
 
+	b.setTo(0);
 	{
 		int64 pre = getTickCount();
 		for(int i=0;i<iter;i++)
@@ -181,13 +201,30 @@ void iDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 	}
 	if(isShowMat) cout<<b<<endl;
 
+	b.setTo(0);
 	Mat temp = Mat::zeros(4,4,CV_32F);
 	//dest Mat should be allocated 
 	{
 		int64 pre = getTickCount();
+		float* s = a.ptr<float>(0);
+		float* d = b.ptr<float>(0);
+		float* t = temp.ptr<float>(0);
 		for(int i=0;i<iter;i++)
-			dct4x4_llm(a,b,temp,DCT_INVERSE);
+			dct4x4_llm(s,d,t,DCT_INVERSE);
 		cout<<"LLM(c++):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	if(isShowMat) cout<<b<<endl;
+
+	b.setTo(0);
+	//dest Mat should be allocated 
+	{
+		int64 pre = getTickCount();
+		float* s = a.ptr<float>(0);
+		float* d = b.ptr<float>(0);
+		float* t = temp.ptr<float>(0);
+		for(int i=0;i<iter;i++)
+			dct4x4_llm_sse(s,d,t,DCT_INVERSE);
+		cout<<"LLM(SSE):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 	}
 	if(isShowMat) cout<<b<<endl;
 //	cout<<d*0.5<<endl;
@@ -201,9 +238,13 @@ int main()
 	s44.at<float>(2,0)=1.f;
 
 	const int iter=100000;
-	//fDCT4x4Test(s44,iter,false);cout<<endl;
-	//iDCT4x4Test(s44,iter,false);
-	
+	cout<<"fwd 4x4:"<<endl;
+	fDCT4x4Test(s44,iter,false); cout<<endl;
+	//fDCT4x4Test(s44,iter,true);cout<<endl;
+	cout<<"inv 4x4:"<<endl;
+	//iDCT4x4Test(s44,iter,false); cout<<endl;
+	iDCT4x4Test(s44,iter,true); cout<<endl;
+
 	//src image: 32f bit gray for our function
 	Mat b = imread("haze1.jpg",0);
 	Mat a;b.convertTo(a,CV_32F);
@@ -223,7 +264,8 @@ int main()
 	//inv DCT x 100000 iteration, without showing coefficient
 	iDCT_Test(src,iter,false);
 	//iDCT_Test(src,iter,true);
-	
+
+	//return 0;
 
 	waitKey(1000);
 	Mat aq(a.size(),CV_32F);
