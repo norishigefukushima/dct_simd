@@ -2,13 +2,14 @@
 #define  _USE_MATH_DEFINES
 #include <math.h>
 
-//info: code
-//http://d.hatena.ne.jp/shiku_otomiya/20100902/p1 (in japanese)
 
 //paper LLM89
 //C. Loeffler, A. Ligtenberg, and G. S. Moschytz, 
 //"Practical fast 1-D DCT algorithms with 11 multiplications,"
 //Proc. Int'l. Conf. on Acoustics, Speech, and Signal Processing (ICASSP89), pp. 988-991, 1989.
+
+void transpose8x8(float* src);
+void transpose8x8(const float* src, float* dest);
 
 void fDCT2D8x4_32f(const float* x, float* y)
 {

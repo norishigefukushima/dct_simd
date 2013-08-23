@@ -5,8 +5,12 @@
 //#pragma comment(lib, "opencv_highgui240.lib")
 
 //for opencv2.45 (may faster than 2.4 )
-#pragma comment(lib, "opencv_core245.lib")
-#pragma comment(lib, "opencv_highgui245.lib")
+//#pragma comment(lib, "opencv_core245.lib")
+//#pragma comment(lib, "opencv_highgui245.lib")
+
+//for opencv2.46 
+#pragma comment(lib, "opencv_core246.lib")
+#pragma comment(lib, "opencv_highgui246.lib")
 
 using namespace cv;
 using namespace std;
@@ -15,9 +19,14 @@ using namespace std;
 //simd LLM
 void iDCT8x8_32f(const float* s, float* d, float* temp);//inv
 void fDCT8x8_32f(const float* s, float* d, float* temp);//fwd
+
 //c++ LLM
 void iDCT2Dllm_32f(const float* s, float* d, float* temp);//inv
 void fDCT2Dllm_32f(const float* s, float* d, float* temp);//fwd
+
+void dct4x4_llm(Mat& a, Mat& b, Mat& temp ,int flag=0);//LLM C++ implimentation
+void dct4x4_bf(Mat& a, Mat& b, int flag=0);//matmul: brute force implimentation
+
 
 void fDCT_Test(Mat& src, int iter=100000,bool isShowCoeff=false)
 {
@@ -121,8 +130,46 @@ void DCT_Quant_Test(Mat& src, Mat& dest,float threshold)
 	}
 }
 
+
+void DCT4x4Test(int iter = 100000)
+{
+	Mat a = Mat::zeros(4,4,CV_32F);
+	a.at<float>(0,0)=1.f;
+	a.at<float>(1,0)=1.f;
+	a.at<float>(2,0)=1.f;
+
+	Mat b;
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			cv::dct(a,b);//DFT based implimentation
+		cout<<"opencv:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	cout<<b<<endl;
+
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			dct4x4_bf(a,b);
+		cout<<"BF:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	cout<<b<<endl;
+
+	Mat temp = Mat::zeros(4,4,CV_32F);
+	//dest Mat should be allocated 
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			dct4x4_llm(a,b,temp);
+		cout<<"LLM(c++):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	cout<<b<<endl;
+//	cout<<d*0.5<<endl;
+}
+
 int main()
 {
+	DCT4x4Test(100000);return 0;
 	//src image: 32f bit gray for our function
 	Mat b = imread("haze1.jpg",0);
 	Mat a;b.convertTo(a,CV_32F);
