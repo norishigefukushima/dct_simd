@@ -131,7 +131,16 @@ void fDCT1Dllm_32f(const float* x, float* y)
 {
 	float t0,t1,t2,t3,t4,t5,t6,t7; float c0,c1,c2,c3; float r[8];int i;
 
-	for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2); }
+	//for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2); }
+	r[0]=1.414214f;
+	r[1]=1.387040f;
+	r[2]=1.306563f;
+	r[3]=1.175876f;
+	r[4]=1.000000f;
+	r[5]=0.785695f;
+	r[6]=0.541196f;
+	r[7]=0.275899f;
+
 	const float invsqrt2= 0.707107f;//(float)(1.0f / M_SQRT2);
 	const float invsqrt2h=0.353554f;//invsqrt2*0.5f;
 
@@ -171,33 +180,28 @@ void fDCT2Dllm_32f(const float* s, float* d, float* temp)
 		fDCT1Dllm_32f(s+j*8, temp+j*8);
 	}
 
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			d[8*i+j] =temp[8*j+i];
-		}
-	}
+	transpose8x8(temp,d);
+
 	for (int j = 0; j < 8; j ++)
 	{
 		fDCT1Dllm_32f(d+j*8, temp+j*8);
 	}
-
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			d[8*i+j] =temp[8*j+i];
-		}
-	}
+	transpose8x8(temp,d);
 }
-
+#include <stdio.h>
 void iDCT1Dllm_32f(const float* y, float* x)
 {
 	float a0,a1,a2,a3,b0,b1,b2,b3; float z0,z1,z2,z3,z4; float r[8]; int i;
-
-	for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2); }
-
+	//for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2);printf("%f\n",r[i]); }
+	r[0]=1.414214f;
+	r[1]=1.387040f;
+	r[2]=1.306563f;
+	r[3]=1.175876f;
+	r[4]=1.000000f;
+	r[5]=0.785695f;
+	r[6]=0.541196f;
+	r[7]=0.275899f;
+	
 	z0 = y[1] + y[7]; z1 = y[3] + y[5]; z2 = y[3] + y[7]; z3 = y[1] + y[5];
 	z4 = (z0 + z1) * r[3];
 
@@ -232,26 +236,12 @@ void iDCT2Dllm_32f(const float* s, float* d, float* temp)
 	{
 		iDCT1Dllm_32f(s+j*8, temp+j*8);
 	}
-
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			d[8*i+j] =temp[8*j+i];
-		}
-	}
+	transpose8x8(temp,d);
 	for (int j = 0; j < 8; j ++)
 	{
 		iDCT1Dllm_32f(d+j*8, temp+j*8);
 	}
-
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			d[8*i+j] =temp[8*j+i];
-		}
-	}
+	transpose8x8(temp,d);
 }
 
 void iDCT2D8x4_32f(const float* y, float* x)

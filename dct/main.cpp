@@ -131,13 +131,8 @@ void DCT_Quant_Test(Mat& src, Mat& dest,float threshold)
 }
 
 
-void DCT4x4Test(int iter = 100000)
+void fDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 {
-	Mat a = Mat::zeros(4,4,CV_32F);
-	a.at<float>(0,0)=1.f;
-	a.at<float>(1,0)=1.f;
-	a.at<float>(2,0)=1.f;
-
 	Mat b;
 	{
 		int64 pre = getTickCount();
@@ -145,7 +140,7 @@ void DCT4x4Test(int iter = 100000)
 			cv::dct(a,b);//DFT based implimentation
 		cout<<"opencv:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 	}
-	cout<<b<<endl;
+	if(isShowMat) cout<<b<<endl;
 
 	{
 		int64 pre = getTickCount();
@@ -153,7 +148,7 @@ void DCT4x4Test(int iter = 100000)
 			dct4x4_bf(a,b);
 		cout<<"BF:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 	}
-	cout<<b<<endl;
+	if(isShowMat) cout<<b<<endl;
 
 	Mat temp = Mat::zeros(4,4,CV_32F);
 	//dest Mat should be allocated 
@@ -163,13 +158,52 @@ void DCT4x4Test(int iter = 100000)
 			dct4x4_llm(a,b,temp);
 		cout<<"LLM(c++):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 	}
-	cout<<b<<endl;
+	if(isShowMat) cout<<b<<endl;
+//	cout<<d*0.5<<endl;
+}
+
+void iDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
+{
+	Mat b;
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			cv::dct(a,b,DCT_INVERSE);//DFT based implimentation
+		cout<<"opencv:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	if(isShowMat) cout<<b<<endl;
+
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			dct4x4_bf(a,b,DCT_INVERSE);
+		cout<<"BF:"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	if(isShowMat) cout<<b<<endl;
+
+	Mat temp = Mat::zeros(4,4,CV_32F);
+	//dest Mat should be allocated 
+	{
+		int64 pre = getTickCount();
+		for(int i=0;i<iter;i++)
+			dct4x4_llm(a,b,temp,DCT_INVERSE);
+		cout<<"LLM(c++):"<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
+	}
+	if(isShowMat) cout<<b<<endl;
 //	cout<<d*0.5<<endl;
 }
 
 int main()
 {
-	DCT4x4Test(100000);return 0;
+	Mat s44 = Mat::zeros(4,4,CV_32F);
+	s44.at<float>(0,0)=1.f;
+	s44.at<float>(1,0)=1.f;
+	s44.at<float>(2,0)=1.f;
+
+	const int iter=100000;
+	//fDCT4x4Test(s44,iter,false);cout<<endl;
+	//iDCT4x4Test(s44,iter,false);
+	
 	//src image: 32f bit gray for our function
 	Mat b = imread("haze1.jpg",0);
 	Mat a;b.convertTo(a,CV_32F);
@@ -180,15 +214,17 @@ int main()
 	a(Rect(8*24,8*16,8,8)).copyTo(src);
 
 	//fwd DCT x 100000 iteration, without showing coefficient
-	fDCT_Test(src,100000,false);
-
+	fDCT_Test(src,iter,false);
+	//fDCT_Test(src,iter,true);
 	Mat swp;
 	//fwd DCT for inv DCT
 	cv::dct(src,swp);
 	swp.copyTo(src);
 
 	//inv DCT x 100000 iteration, without showing coefficient
-	iDCT_Test(src,100000,false);
+	iDCT_Test(src,iter,false);
+
+	return 0;
 
 	waitKey(1000);
 	Mat aq(a.size(),CV_32F);
