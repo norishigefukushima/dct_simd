@@ -1,5 +1,6 @@
 #include <nmmintrin.h> //SSE4.2
 #define  _USE_MATH_DEFINES
+#include <stdio.h>
 #include <math.h>
 
 
@@ -166,29 +167,29 @@ void fDCT1Dllm_32f(const float* x, float* y)
 	c0 = (c0 + c2) * invsqrt2;
 	c3 = (c3 + c1) * invsqrt2;
 	y[1] = c0 + c3; y[7] = c0 - c3;
-
-	for(i = 0;i < 8;i++)
-	{ 
-		y[i] *= invsqrt2h; 
-	}
 }
 
 void fDCT2Dllm_32f(const float* s, float* d, float* temp)
 {
-	for (int j = 0; j < 8; j ++)
+	int j;
+	for (j = 0; j < 8; j ++)
 	{
 		fDCT1Dllm_32f(s+j*8, temp+j*8);
 	}
-
 	transpose8x8(temp,d);
 
-	for (int j = 0; j < 8; j ++)
+	for (j = 0; j < 8; j ++)
 	{
 		fDCT1Dllm_32f(d+j*8, temp+j*8);
 	}
 	transpose8x8(temp,d);
+
+	for(j = 0;j < 64;j++)
+	{ 
+		d[j] *= 0.125; 
+	}
 }
-#include <stdio.h>
+
 void iDCT1Dllm_32f(const float* y, float* x)
 {
 	float a0,a1,a2,a3,b0,b1,b2,b3; float z0,z1,z2,z3,z4; float r[8]; int i;
@@ -226,22 +227,28 @@ void iDCT1Dllm_32f(const float* y, float* x)
 	x[1] = a1 + b1; x[6] = a1 - b1;
 	x[2] = a2 + b2; x[5] = a2 - b2;
 	x[3] = a3 + b3; x[4] = a3 - b3;
-
-	for(i = 0;i < 8;i++){ x[i] *= 0.353554f; }
 }
 
 void iDCT2Dllm_32f(const float* s, float* d, float* temp)
 {
-	for (int j = 0; j < 8; j ++)
+	int j;
+
+	for (j = 0; j < 8; j ++)
 	{
 		iDCT1Dllm_32f(s+j*8, temp+j*8);
 	}
 	transpose8x8(temp,d);
-	for (int j = 0; j < 8; j ++)
+
+	for (j = 0; j < 8; j ++)
 	{
 		iDCT1Dllm_32f(d+j*8, temp+j*8);
 	}
 	transpose8x8(temp,d);
+
+	for(j = 0;j < 64;j++)
+	{ 
+		d[j] *= 0.125; 
+	}
 }
 
 void iDCT2D8x4_32f(const float* y, float* x)

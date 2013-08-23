@@ -208,7 +208,6 @@ int main()
 	Mat b = imread("haze1.jpg",0);
 	Mat a;b.convertTo(a,CV_32F);
 
-
 	//make 8x8 macro block
 	Mat src;
 	a(Rect(8*24,8*16,8,8)).copyTo(src);
@@ -223,8 +222,8 @@ int main()
 
 	//inv DCT x 100000 iteration, without showing coefficient
 	iDCT_Test(src,iter,false);
-
-	return 0;
+	//iDCT_Test(src,iter,true);
+	
 
 	waitKey(1000);
 	Mat aq(a.size(),CV_32F);
