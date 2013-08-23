@@ -51,17 +51,17 @@ void fDCT2D8x4_32f(const float* x, float* y)
 	c1 = t1 + t2; c2 = t1 - t2;
 	*/
 
-	const __m128 invsqrt2h = _mm_set_ps1(0.353554f);
-	_mm_store_ps(y,_mm_mul_ps(_mm_add_ps(c0,c1),invsqrt2h));
-	_mm_store_ps(y+32,_mm_mul_ps(_mm_sub_ps(c0,c1),invsqrt2h));
+	
+	_mm_store_ps(y,_mm_add_ps(c0,c1));
+	_mm_store_ps(y+32,_mm_sub_ps(c0,c1));
 
 	/*y[0] = c0 + c1;
 	y[4] = c0 - c1;*/
 
 	__m128 w0 = _mm_set_ps1(0.541196f);
 	__m128 w1 = _mm_set_ps1(1.306563f);	
-	_mm_store_ps(y+16,_mm_mul_ps(_mm_add_ps(_mm_mul_ps(w0,c2),_mm_mul_ps(w1,c3)),  invsqrt2h));
-	_mm_store_ps(y+48,_mm_mul_ps(_mm_sub_ps(_mm_mul_ps(w0,c3),_mm_mul_ps(w1,c2)),  invsqrt2h));
+	_mm_store_ps(y+16,_mm_add_ps(_mm_mul_ps(w0,c2),_mm_mul_ps(w1,c3)));
+	_mm_store_ps(y+48,_mm_sub_ps(_mm_mul_ps(w0,c3),_mm_mul_ps(w1,c2)));
 	/*
 	y[2] = c2 * r[6] + c3 * r[2];
 	y[6] = c3 * r[6] - c2 * r[2];
@@ -85,8 +85,8 @@ void fDCT2D8x4_32f(const float* x, float* y)
 	c1 = t6 * r[1] - t5 * r[7];
 	*/
 
-	_mm_store_ps(y+24,_mm_mul_ps(_mm_sub_ps(c0,c2),  invsqrt2h));
-	_mm_store_ps(y+40,_mm_mul_ps(_mm_sub_ps(c3,c1),  invsqrt2h));
+	_mm_store_ps(y+24,_mm_sub_ps(c0,c2));
+	_mm_store_ps(y+40,_mm_sub_ps(c3,c1));
 	//y[5] = c3 - c1; y[3] = c0 - c2;
 
 	const __m128 invsqrt2 = _mm_set_ps1(0.707107f);
@@ -95,8 +95,8 @@ void fDCT2D8x4_32f(const float* x, float* y)
 	//c0 = (c0 + c2) * invsqrt2;
 	//c3 = (c3 + c1) * invsqrt2;
 
-	_mm_store_ps(y+8,_mm_mul_ps(_mm_add_ps(c0,c3),  invsqrt2h));
-	_mm_store_ps(y+56,_mm_mul_ps(_mm_sub_ps(c0,c3),  invsqrt2h));
+	_mm_store_ps(y+8,_mm_add_ps(c0,c3));
+	_mm_store_ps(y+56,_mm_sub_ps(c0,c3));
 	//y[1] = c0 + c3; y[7] = c0 - c3;
 
 	/*for(i = 0;i < 8;i++)
@@ -104,28 +104,35 @@ void fDCT2D8x4_32f(const float* x, float* y)
 	y[i] *= invsqrt2h; 
 	}*/
 }
-void fDCT8x8_32f(const float* s, float* d, float* temp)
+void fDCT8x8_llm_sse(const float* s, float* d, float* temp)
 {
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			temp[8*i+j] =s[8*j+i];
-		}
-	}
+	transpose8x8(s,temp);
 
 	fDCT2D8x4_32f(temp, d);
 	fDCT2D8x4_32f(temp+4, d+4);
 
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			temp[8*i+j] =d[8*j+i];
-		}
-	}
+	transpose8x8(d,temp);
+	
 	fDCT2D8x4_32f(temp, d);
 	fDCT2D8x4_32f(temp+4, d+4);
+
+	__m128 c=_mm_set1_ps(0.1250f);
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//0
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//1
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//2
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//3
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//4
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//5
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//6
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//7
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//8
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//9
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//10
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//11
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//12
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//13
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//14
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//15
 }
 
 void fDCT1Dllm_32f(const float* x, float* y)
@@ -169,7 +176,7 @@ void fDCT1Dllm_32f(const float* x, float* y)
 	y[1] = c0 + c3; y[7] = c0 - c3;
 }
 
-void fDCT2Dllm_32f(const float* s, float* d, float* temp)
+void fDCT2D_llm(const float* s, float* d, float* temp)
 {
 	int j;
 	for (j = 0; j < 8; j ++)
@@ -229,7 +236,7 @@ void iDCT1Dllm_32f(const float* y, float* x)
 	x[3] = a3 + b3; x[4] = a3 - b3;
 }
 
-void iDCT2Dllm_32f(const float* s, float* d, float* temp)
+void iDCT2D_llm(const float* s, float* d, float* temp)
 {
 	int j;
 
@@ -247,7 +254,7 @@ void iDCT2Dllm_32f(const float* s, float* d, float* temp)
 
 	for(j = 0;j < 64;j++)
 	{ 
-		d[j] *= 0.125; 
+		d[j] *= 0.125f; 
 	}
 }
 
@@ -351,15 +358,14 @@ void iDCT2D8x4_32f(const float* y, float* x)
 	a1 = z1 + z2; a2 = z1 - z2;
 	*/
 
-	w = _mm_set1_ps(0.353554f);
-	_mm_store_ps(x   ,_mm_mul_ps(w,_mm_add_ps(my0,mb0)));
-	_mm_store_ps(x+56,_mm_mul_ps(w,_mm_sub_ps(my0,mb0)));
-	_mm_store_ps(x+ 8,_mm_mul_ps(w,_mm_add_ps(my1,mb1)));
-	_mm_store_ps(x+48,_mm_mul_ps(w,_mm_sub_ps(my1,mb1)));
-	_mm_store_ps(x+16,_mm_mul_ps(w,_mm_add_ps(my2,mb2)));
-	_mm_store_ps(x+40,_mm_mul_ps(w,_mm_sub_ps(my2,mb2)));
-	_mm_store_ps(x+24,_mm_mul_ps(w,_mm_add_ps(my3,mb3)));
-	_mm_store_ps(x+32,_mm_mul_ps(w,_mm_sub_ps(my3,mb3)));
+	_mm_store_ps(x   ,_mm_add_ps(my0,mb0));
+	_mm_store_ps(x+56,_mm_sub_ps(my0,mb0));
+	_mm_store_ps(x+ 8,_mm_add_ps(my1,mb1));
+	_mm_store_ps(x+48,_mm_sub_ps(my1,mb1));
+	_mm_store_ps(x+16,_mm_add_ps(my2,mb2));
+	_mm_store_ps(x+40,_mm_sub_ps(my2,mb2));
+	_mm_store_ps(x+24,_mm_add_ps(my3,mb3));
+	_mm_store_ps(x+32,_mm_sub_ps(my3,mb3));
 	/*
 	x[0] = a0 + b0; x[7] = a0 - b0;
 	x[1] = a1 + b1; x[6] = a1 - b1;
@@ -369,27 +375,34 @@ void iDCT2D8x4_32f(const float* y, float* x)
 	*/
 }
 
-void iDCT8x8_32f(const float* s, float* d, float* temp)
+void iDCT8x8_llm_sse(const float* s, float* d, float* temp)
 {
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			temp[8*i+j] =s[8*j+i];
-		}
-	}
+	transpose8x8(s,temp);
+
 	iDCT2D8x4_32f(temp, d);
 	iDCT2D8x4_32f(temp+4, d+4);
 
-	for (int j = 0; j < 8; j ++)
-	{
-		for (int i = 0; i < 8; i ++)
-		{
-			temp[8*i+j] =d[8*j+i];
-		}
-	}
+	transpose8x8(d,temp);
 	iDCT2D8x4_32f(temp, d);
 	iDCT2D8x4_32f(temp+4, d+4);
+
+	__m128 c=_mm_set1_ps(0.1250f);
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//0
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//1
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//2
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//3
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//4
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//5
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//6
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//7
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//8
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//9
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//10
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//11
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//12
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//13
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//14
+	_mm_store_ps(d,_mm_mul_ps(_mm_load_ps(d),c));d+=4;//15
 }
 
 

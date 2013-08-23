@@ -17,12 +17,12 @@ using namespace std;
 #include<iostream>
 
 //simd LLM
-void iDCT8x8_32f(const float* s, float* d, float* temp);//inv
-void fDCT8x8_32f(const float* s, float* d, float* temp);//fwd
+void iDCT8x8_llm_sse(const float* s, float* d, float* temp);//inv
+void fDCT8x8_llm_sse(const float* s, float* d, float* temp);//fwd
 
 //c++ LLM
-void iDCT2Dllm_32f(const float* s, float* d, float* temp);//inv
-void fDCT2Dllm_32f(const float* s, float* d, float* temp);//fwd
+void iDCT2D_llm(const float* s, float* d, float* temp);//inv
+void fDCT2D_llm(const float* s, float* d, float* temp);//fwd
 
 void dct4x4_llm_sse(float* a, float* b, float* temp ,int flag=0);//LLM SSE implimentation
 void dct4x4_llm(float* a, float* b, float* temp ,int flag=0);//LLM C++ implimentation
@@ -45,12 +45,12 @@ void fDCT_Test(Mat& src, int iter=100000,bool isShowCoeff=false)
 
 	pre = getTickCount();
 	for(int i=0;i<iter;i++)
-		fDCT2Dllm_32f(src.ptr<float>(0),dst1.ptr<float>(0),tmp.ptr<float>(0));
+		fDCT2D_llm(src.ptr<float>(0),dst1.ptr<float>(0),tmp.ptr<float>(0));
 	cout<<"llm: "<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 
 	pre = getTickCount();
 	for(int i=0;i<iter;i++)
-		fDCT8x8_32f(src.ptr<float>(0),dst2.ptr<float>(0),tmp.ptr<float>(0));
+		fDCT8x8_llm_sse(src.ptr<float>(0),dst2.ptr<float>(0),tmp.ptr<float>(0));
 	cout<<"llm sse: "<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 
 	if(isShowCoeff)
@@ -80,13 +80,13 @@ void iDCT_Test(Mat& src, int iter=100000, bool isShowCoeff=false)
 	{
 		//src and dest pointers require 16byte alignment, and continuous field.
 		//These pointer should are derived from OpenCV Mat or __declspec(align(16)) definition or _aligned_malloc and so on.
-		iDCT2Dllm_32f(src.ptr<float>(0),dst1.ptr<float>(0),tmp.ptr<float>(0));
+		iDCT2D_llm(src.ptr<float>(0),dst1.ptr<float>(0),tmp.ptr<float>(0));
 	}
 	cout<<"llm: "<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 
 	pre = getTickCount();
 	for(int i=0;i<iter;i++)
-		iDCT8x8_32f(src.ptr<float>(0),dst2.ptr<float>(0),tmp.ptr<float>(0));
+		iDCT8x8_llm_sse(src.ptr<float>(0),dst2.ptr<float>(0),tmp.ptr<float>(0));
 	cout<<"llm sse: "<<1000.0*(getTickCount()-pre)/(getTickFrequency())<<" ms"<<endl;
 
 	if(isShowCoeff)
@@ -112,7 +112,7 @@ void DCT_Quant_Test(Mat& src, Mat& dest,float threshold)
 			//make macro block
 			src(Rect(8*i,8*j,8,8)).copyTo(mblock);
 			//fwd DCT
-			fDCT8x8_32f((float*)mblock.data,(float*)dst.data,(float*)tmp.data);
+			fDCT8x8_llm_sse((float*)mblock.data,(float*)dst.data,(float*)tmp.data);
 
 			//cut off coefficient like JPEG
 			//bottleneck processes...///
@@ -123,7 +123,7 @@ void DCT_Quant_Test(Mat& src, Mat& dest,float threshold)
 			///////////////
 			
 			//inv DCT
-			iDCT8x8_32f((float*)swp.data,(float*)dst.data,(float*)tmp.data);
+			iDCT8x8_llm_sse((float*)swp.data,(float*)dst.data,(float*)tmp.data);
 
 			//copy micro block into dst image
 			dst.copyTo(dest(Rect(8*i,8*j,8,8)));
@@ -232,6 +232,8 @@ void iDCT4x4Test(Mat& a, int iter = 100000, bool isShowMat=false)
 
 int main()
 {
+	//const bool isShow = true;
+	const bool isShow = false;
 	Mat s44 = Mat::zeros(4,4,CV_32F);
 	s44.at<float>(0,0)=1.f;
 	s44.at<float>(1,0)=1.f;
@@ -239,11 +241,11 @@ int main()
 
 	const int iter=100000;
 	cout<<"fwd 4x4:"<<endl;
-	fDCT4x4Test(s44,iter,false); cout<<endl;
-	//fDCT4x4Test(s44,iter,true);cout<<endl;
+	fDCT4x4Test(s44,iter,isShow); cout<<endl;
+	
 	cout<<"inv 4x4:"<<endl;
-	//iDCT4x4Test(s44,iter,false); cout<<endl;
-	iDCT4x4Test(s44,iter,true); cout<<endl;
+	iDCT4x4Test(s44,iter,isShow); cout<<endl;
+	
 
 	//src image: 32f bit gray for our function
 	Mat b = imread("haze1.jpg",0);
@@ -254,18 +256,17 @@ int main()
 	a(Rect(8*24,8*16,8,8)).copyTo(src);
 
 	//fwd DCT x 100000 iteration, without showing coefficient
-	fDCT_Test(src,iter,false);
-	//fDCT_Test(src,iter,true);
+	fDCT_Test(src,iter,isShow);
+	
 	Mat swp;
 	//fwd DCT for inv DCT
 	cv::dct(src,swp);
 	swp.copyTo(src);
 
 	//inv DCT x 100000 iteration, without showing coefficient
-	iDCT_Test(src,iter,false);
-	//iDCT_Test(src,iter,true);
+	iDCT_Test(src,iter,isShow);
 
-	//return 0;
+	return 0;
 
 	waitKey(1000);
 	Mat aq(a.size(),CV_32F);
