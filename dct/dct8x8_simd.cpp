@@ -137,7 +137,7 @@ void fDCT8x8_llm_sse(const float* s, float* d, float* temp)
 
 void fDCT1Dllm_32f(const float* x, float* y)
 {
-	float t0,t1,t2,t3,t4,t5,t6,t7; float c0,c1,c2,c3; float r[8];int i;
+	float t0,t1,t2,t3,t4,t5,t6,t7; float c0,c1,c2,c3; float r[8];
 
 	//for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2); }
 	r[0]=1.414214f;
@@ -199,7 +199,7 @@ void fDCT2D_llm(const float* s, float* d, float* temp)
 
 void iDCT1Dllm_32f(const float* y, float* x)
 {
-	float a0,a1,a2,a3,b0,b1,b2,b3; float z0,z1,z2,z3,z4; float r[8]; int i;
+	float a0,a1,a2,a3,b0,b1,b2,b3; float z0,z1,z2,z3,z4; float r[8];
 	//for(i = 0;i < 8;i++){ r[i] = (float)(cos((double)i / 16.0 * M_PI) * M_SQRT2);printf("%f\n",r[i]); }
 	r[0]=1.414214f;
 	r[1]=1.387040f;

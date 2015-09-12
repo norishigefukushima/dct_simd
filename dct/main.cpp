@@ -1,16 +1,25 @@
 #include <opencv2/opencv.hpp>
 
-//for opencv2.4
-//#pragma comment(lib, "opencv_core240.lib")
-//#pragma comment(lib, "opencv_highgui240.lib")
+#include <opencv2/opencv.hpp>
+#include <opencv2/xphoto.hpp>
+#ifdef CP_API
+#define CP_EXPORT __declspec(dllexport)
+#else 
+#define CP_EXPORT 
+#endif
 
-//for opencv2.45 (may faster than 2.4 )
-//#pragma comment(lib, "opencv_core245.lib")
-//#pragma comment(lib, "opencv_highgui245.lib")
 
-//for opencv2.46 
-#pragma comment(lib, "opencv_core246.lib")
-#pragma comment(lib, "opencv_highgui246.lib")
+
+#define CV_VERSION_NUMBER CVAUX_STR(CV_MAJOR_VERSION) CVAUX_STR(CV_MINOR_VERSION) CVAUX_STR(CV_SUBMINOR_VERSION)
+
+#ifdef _DEBUG
+
+#else
+#pragma comment(lib, "opencv_core"CV_VERSION_NUMBER".lib")
+#pragma comment(lib, "opencv_highgui"CV_VERSION_NUMBER".lib")
+#pragma comment(lib, "opencv_imgcodecs"CV_VERSION_NUMBER".lib")
+#pragma comment(lib, "opencv_imgproc"CV_VERSION_NUMBER".lib")
+#endif
 
 using namespace cv;
 using namespace std;
@@ -31,6 +40,8 @@ void dct4x4_llm_sse(float* a, float* b, float* temp ,int flag=0);//LLM SSE impli
 void dct4x4_llm(float* a, float* b, float* temp ,int flag=0);//LLM C++ implimentation
 void dct4x4_bf(Mat& a, Mat& b, int flag=0);//matmul: brute force implimentation
 
+void iDCT16x16(const float* src, float* dest);
+void fDCT16x16(const float* src, float* dest);
 
 void fDCT_Test(Mat& src, int iter=100000,bool isShowCoeff=false)
 {
