@@ -409,7 +409,7 @@ void iDCT8x8_llm_sse(const float* s, float* d, float* temp)
 
 static void fdct81d_GT(const float *src, float *dst)
 {
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 8; i++)
 	{
 
 		const float mx00 = src[0] + src[7];
@@ -438,8 +438,8 @@ static void fdct81d_GT(const float *src, float *dst)
 		dst[5] = 0.707106781186547f * (mx10 + mx11);
 		dst[6] = 0.191341716182545f*mx0a - 0.461939766255643f*mx0b;
 		dst[7] = 0.353553390593274f * (mx0e + mx0f);
-		dst += 4;
-		src += 4;
+		dst += 8;
+		src += 8;
 	}
 }
 
