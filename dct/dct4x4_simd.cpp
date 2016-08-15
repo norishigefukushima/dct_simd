@@ -89,7 +89,7 @@ void dct4x4_1d_tglxlzw_fwd_sse(float* s, float* d)
 	__m128 p12 = _mm_add_ps(s1,s2);
 	__m128 m12 = _mm_sub_ps(s1,s2);
 
-	__m128 i0 = _mm_add_ps(_mm_add_ps(s0,s3),m12);	
+	__m128 i0 = _mm_add_ps(_mm_sub_ps(s0,s3),m12);	
 	__m128 i1 = _mm_mul_ps(sq,m12);	
 
 	_mm_store_ps(d, _mm_add_ps(p03,p12));
